@@ -7,75 +7,81 @@
     android:background="@color/white"
     tools:context=".AddStoryActivity">
 
-    <TextView
-        android:id="@+id/story"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Story"
-        android:background="@android:color/darker_gray"
-        android:textColor="@color/black"
-        android:paddingHorizontal="20dp"
-        android:paddingVertical="20dp"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:gravity="center_horizontal"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/story">
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="250dp"
-            android:layout_height="210dp"
-            app:srcCompat="@color/teal_200"
+            android:id="@+id/preview"
+            android:layout_width="270dp"
+            android:layout_height="250dp"
+            app:srcCompat="@color/navy"
             android:layout_marginVertical="30dp"/>
 
         <LinearLayout
-            android:layout_width="250dp"
+            android:layout_width="270dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/camera"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:background="@android:color/darker_gray"
                 android:text="Camera"
+                android:layout_marginEnd="2dp"
                 android:textColor="@color/black"/>
 
             <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/gallery"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Camera"
+                android:background="@android:color/darker_gray"
+                android:text="Gallery"
+                android:layout_marginStart="2dp"
                 android:textColor="@color/black"/>
 
         </LinearLayout>
 
-        <EditText
-            android:layout_marginVertical="20dp"
-            android:hint="Description"
-            android:textColorHint="@android:color/darker_gray"
-            android:textSize="12sp"
-            android:textColor="@color/black"
-            android:gravity="start"
-            android:padding="5dp"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailEditTextLayout"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="270dp"
             android:layout_height="200dp"
-            android:autofillHints=""
-            android:inputType="textMultiLine" />
+            android:layout_marginVertical="20sp"
+            android:layout_marginHorizontal="20dp"
+            app:hintTextColor="@android:color/darker_gray"
+            app:boxStrokeColor="@color/black"
+            app:boxStrokeWidth="1dp"
+            app:startIconTint="@color/black">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edDesc"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:ems="10"
+                android:hint="Description"
+                android:gravity="start"
+                android:textColor="@color/black"
+                android:inputType="textMultiLine"
+                tools:ignore="SpeakableTextPresentCheck" />
+
+        </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnUpload"
             android:layout_width="270dp"
             android:layout_height="wrap_content"
             android:text="Upload"
+            android:background="@android:color/darker_gray"
             android:textColor="@color/black"/>
 
     </LinearLayout>
