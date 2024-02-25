@@ -1,12 +1,14 @@
 package com.app.storyapp.adapter
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.app.ActivityOptionsCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.app.storyapp.DetailStoryActivity
 import com.app.storyapp.R
@@ -44,10 +46,7 @@ class ListStoryAdapter(private var listData: MutableList<ListStoryItem>): Recycl
         holder.itemView.setOnClickListener{
             val i = Intent(it.context, DetailStoryActivity::class.java)
             i.putExtra("id", data.id)
-            i.putExtra("name", data.name)
-            i.putExtra("poto", data.photoUrl)
-            i.putExtra("desc", data.description)
-            it.context.startActivity(i)
+            it.context.startActivity(i, ActivityOptionsCompat.makeSceneTransitionAnimation(it.context as Activity).toBundle())
         }
     }
 

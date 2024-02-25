@@ -2,9 +2,11 @@ package com.app.storyapp.api
 
 import com.app.storyapp.models.ListStoryItem
 import com.app.storyapp.models.RequestLogin
+import com.app.storyapp.models.RequestRegister
 import com.app.storyapp.models.ResponseDetailStory
 import com.app.storyapp.models.ResponseListStory
 import com.app.storyapp.models.ResponseLogin
+import com.app.storyapp.models.ResponseRegister
 import com.app.storyapp.models.ResponseUploadStory
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -33,8 +35,11 @@ class BaseApi {
 
 interface urlData {
 
+    @POST("register")
+    fun postRegister(@Body reqRegister: RequestRegister): Call<ResponseRegister>
+
     @POST("login")
-    fun postLogin(@Body reqLogin:RequestLogin): Call<ResponseLogin>
+    fun postLogin(@Body reqLogin: RequestLogin): Call<ResponseLogin>
 
     @GET("stories")
     fun getAllStory(

@@ -44,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
                 dataEmail.isEmpty() -> pesanError("Email Masih Kosong...")
                 dataPass.isEmpty() -> pesanError("Password Masih Kosong...")
                 else -> {
-                    bind.loading.visibility = View.VISIBLE
+                    hideOrshowLoading(View.VISIBLE)
                     disableBtn()
                     getResponse(dataEmail, dataPass)
                 }
@@ -68,10 +68,10 @@ class LoginActivity : AppCompatActivity() {
                     val responseLogin = response.body()
                     val token = responseLogin?.loginResult?.token
                     loginViewModel.saveSession(UserModel(dataEmail, token!!))
-                    bind.loading.visibility = View.GONE
+                    hideOrshowLoading(View.GONE)
                     notifSuccess()
                 } else {
-                    bind.loading.visibility = View.GONE
+                    hideOrshowLoading(View.GONE)
                     disableBtn()
                     notifFailed()
                 }
@@ -81,6 +81,10 @@ class LoginActivity : AppCompatActivity() {
                 println(t.message.toString())
             }
         })
+    }
+
+    private fun hideOrshowLoading(i: Int) {
+        bind.loading.visibility = i
     }
 
     private fun notifFailed() {
@@ -116,23 +120,23 @@ class LoginActivity : AppCompatActivity() {
 
     private fun animation() {
         ObjectAnimator.ofFloat(bind.imageView, View.TRANSLATION_X, -30f, 30f).apply {
-            duration = 6000
+            duration = 1000
             repeatCount = ObjectAnimator.INFINITE
             repeatMode = ObjectAnimator.REVERSE
         }.start()
 
-        val title = ObjectAnimator.ofFloat(bind.titleTextView, View.ALPHA, 1f).setDuration(500)
+        val title = ObjectAnimator.ofFloat(bind.titleTextView, View.ALPHA, 1f).setDuration(300)
         val message =
-            ObjectAnimator.ofFloat(bind.messageTextView, View.ALPHA, 1f).setDuration(500)
+            ObjectAnimator.ofFloat(bind.messageTextView, View.ALPHA, 1f).setDuration(300)
         val emailTextView =
-            ObjectAnimator.ofFloat(bind.emailTextView, View.ALPHA, 1f).setDuration(500)
+            ObjectAnimator.ofFloat(bind.emailTextView, View.ALPHA, 1f).setDuration(300)
         val emailEditTextLayout =
-            ObjectAnimator.ofFloat(bind.emailEditTextLayout, View.ALPHA, 1f).setDuration(500)
+            ObjectAnimator.ofFloat(bind.emailEditTextLayout, View.ALPHA, 1f).setDuration(300)
         val passwordTextView =
-            ObjectAnimator.ofFloat(bind.passwordTextView, View.ALPHA, 1f).setDuration(500)
+            ObjectAnimator.ofFloat(bind.passwordTextView, View.ALPHA, 1f).setDuration(300)
         val passwordEditTextLayout =
-            ObjectAnimator.ofFloat(bind.passwordEditTextLayout, View.ALPHA, 1f).setDuration(500)
-        val login = ObjectAnimator.ofFloat(bind.loginButton, View.ALPHA, 1f).setDuration(500)
+            ObjectAnimator.ofFloat(bind.passwordEditTextLayout, View.ALPHA, 1f).setDuration(300)
+        val login = ObjectAnimator.ofFloat(bind.loginButton, View.ALPHA, 1f).setDuration(300)
 
         AnimatorSet().apply {
             playSequentially(
@@ -144,7 +148,7 @@ class LoginActivity : AppCompatActivity() {
                 passwordEditTextLayout,
                 login
             )
-            startDelay = 500
+            startDelay = 300
         }.start()
     }
 }
