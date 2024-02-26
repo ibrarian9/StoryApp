@@ -155,6 +155,7 @@ class AddStoryActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             val responseBody = response.body()
                             if (responseBody != null && !responseBody.error!!) {
+
                                 pesanError(responseBody.message!!)
                                 val i = Intent(this@AddStoryActivity, ListStoryActivity::class.java)
                                 i.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK

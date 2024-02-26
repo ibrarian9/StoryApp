@@ -27,14 +27,6 @@ class RegisterActivity : AppCompatActivity() {
 
         registerData()
         animation()
-
-        bind.edPass.doOnTextChanged { text, _, _, _ ->
-            if (text.toString().length < 8){
-                bind.edPassLayout.error = "Password tidak boleh kurang dari 8 karakter"
-            } else {
-                bind.edPassLayout.error = null
-            }
-        }
     }
 
     private fun registerData() {

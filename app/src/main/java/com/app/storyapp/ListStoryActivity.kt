@@ -1,14 +1,15 @@
 package com.app.storyapp
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.app.storyapp.adapter.ListStoryAdapter
 import com.app.storyapp.api.BaseApi
 import com.app.storyapp.databinding.ActivityListStoryBinding
 import com.app.storyapp.models.ListStoryItem
+import com.app.storyapp.models.PlaceModel
 import com.app.storyapp.models.ResponseListStory
 import com.app.storyapp.models.UserModel
 import com.app.storyapp.viewModels.ListStoryModels
@@ -23,8 +24,7 @@ class ListStoryActivity : AppCompatActivity() {
         ViewModelsFactory.getInstance(this)
     }
     private lateinit var bind: ActivityListStoryBinding
-    private lateinit var listStoryAdapter: ListStoryAdapter
-    private var listData: MutableList<ListStoryItem> = ArrayList()
+    private val listStoryAdapter by lazy { ListStoryAdapter() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,38 +32,25 @@ class ListStoryActivity : AppCompatActivity() {
         setContentView(bind.root)
 
         getToken()
-        setAdapter()
 
+        bind.btnMap.setOnClickListener {
+            startActivity(Intent(this@ListStoryActivity, MapsActivity::class.java))
+        }
         bind.btnAddStory.setOnClickListener {
             startActivity(Intent(this@ListStoryActivity, AddStoryActivity::class.java))
         }
-
         listStoryViewModel.getSession().observe(this) {
             if (!it.isLogin){
                 startActivity(Intent(this, WelcomeActivity::class.java))
                 finish()
             }
         }
-
         bind.btnLogout.setOnClickListener {
             listStoryViewModel.logout()
             val i = Intent(this@ListStoryActivity, WelcomeActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(i)
             finish()
-        }
-    }
-
-    private fun setAdapter() {
-        listStoryAdapter = ListStoryAdapter(listData)
-        bind.rv.layoutManager = LinearLayoutManager(this)
-        bind.rv.adapter = listStoryAdapter
-        bind.rv.setHasFixedSize(true)
-    }
-
-    private fun getToken() {
-        listStoryViewModel.getSession().observe(this){
-            getDataStory(it)
         }
     }
 
@@ -78,7 +65,8 @@ class ListStoryActivity : AppCompatActivity() {
             ) {
                 if (response.isSuccessful){
                     val data: List<ListStoryItem> = response.body()?.listStory ?: emptyList()
-                    listStoryAdapter.updateData(data)
+                    listStoryAdapter.differ.submitList(data)
+                    setAdapter()
                 }
             }
 
@@ -88,4 +76,21 @@ class ListStoryActivity : AppCompatActivity() {
 
         })
     }
+
+    private fun setAdapter() {
+
+        bind.rv.apply {
+            layoutManager = LinearLayoutManager(this@ListStoryActivity)
+            adapter = listStoryAdapter
+            setHasFixedSize(true)
+        }
+    }
+
+    private fun getToken() {
+        listStoryViewModel.getSession().observe(this){
+            getDataStory(it)
+        }
+    }
+
+
 }

@@ -1,58 +1,56 @@
 package com.app.storyapp.adapter
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.app.ActivityOptionsCompat
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.app.storyapp.DetailStoryActivity
-import com.app.storyapp.R
+import com.app.storyapp.databinding.ListLayoutBinding
 import com.app.storyapp.models.ListStoryItem
 import com.squareup.picasso.Picasso
 
-class ListStoryAdapter(private var listData: MutableList<ListStoryItem>): RecyclerView.Adapter<ListStoryAdapter.MyViewHolder>() {
+class ListStoryAdapter : RecyclerView.Adapter<ListStoryAdapter.ViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
-        return MyViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.list_layout, parent, false))
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val bind = ListLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(bind)
     }
 
-    override fun getItemCount(): Int = listData.size
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(differ.currentList[position])
+    }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun updateData(newList: List<ListStoryItem>){
-        listData.apply {
-            this.clear()
-            this.addAll(newList)
-            notifyDataSetChanged()
+    override fun getItemCount(): Int = differ.currentList.size
+
+    inner class ViewHolder(private val bind: ListLayoutBinding) : RecyclerView.ViewHolder(bind.root) {
+        fun bind(item: ListStoryItem) {
+            bind.apply {
+                judulStory.text = item.name
+                textStory.text = item.description
+                Picasso.get().load(item.photoUrl).fit().into(storyPoto)
+
+                itemView.setOnClickListener {
+                    val i = Intent(it.context, DetailStoryActivity::class.java)
+                    i.putExtra("id", item.id)
+                    it.context.startActivity(i, ActivityOptionsCompat.makeSceneTransitionAnimation(it.context as Activity).toBundle())
+                }
+            }
         }
     }
 
-    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val data = listData[position]
+    private val diffCallback = object : DiffUtil.ItemCallback<ListStoryItem>() {
+        override fun areItemsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
+            return oldItem.id == newItem.id
+        }
 
-        val dataPoto = data.photoUrl
-        val dataJudul = data.name
-        val dataIsi = data.description
-
-        Picasso.get().load(dataPoto).fit().into(holder.potoStory)
-        holder.judulStory.text = dataJudul
-        holder.textStory.text = dataIsi
-
-        holder.itemView.setOnClickListener{
-            val i = Intent(it.context, DetailStoryActivity::class.java)
-            i.putExtra("id", data.id)
-            it.context.startActivity(i, ActivityOptionsCompat.makeSceneTransitionAnimation(it.context as Activity).toBundle())
+        override fun areContentsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
+            return oldItem == newItem
         }
     }
 
-    class MyViewHolder(v: View): RecyclerView.ViewHolder(v) {
-        val potoStory: ImageView = v.findViewById(R.id.storyPoto)
-        val judulStory: TextView = v.findViewById(R.id.judulStory)
-        val textStory: TextView = v.findViewById(R.id.textStory)
-    }
+    val differ = AsyncListDiffer(this, diffCallback)
 }

@@ -24,6 +24,9 @@ class ViewModelsFactory(private val repo: UserRepository): ViewModelProvider.New
             modelClass.isAssignableFrom(AddStoryModels::class.java) -> {
                 AddStoryModels(repo) as T
             }
+            modelClass.isAssignableFrom(MapStoryModels::class.java) -> {
+                MapStoryModels(repo) as T
+            }
             else -> throw IllegalArgumentException("Unknown ViewModel Class: " + modelClass.name)
         }
     }

@@ -143,7 +143,7 @@
         app:startIconTint="@color/black"
         tools:alpha="100">
 
-        <com.google.android.material.textfield.TextInputEditText
+        <com.app.storyapp.custom.MyEditText
             android:id="@+id/edPass"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
