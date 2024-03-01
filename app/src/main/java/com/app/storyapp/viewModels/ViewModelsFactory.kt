@@ -3,11 +3,10 @@ package com.app.storyapp.viewModels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.app.storyapp.AddStoryActivity
 import com.app.storyapp.data.Injection
-import com.app.storyapp.data.UserRepository
+import com.app.storyapp.data.StoryRepository
 
-class ViewModelsFactory(private val repo: UserRepository): ViewModelProvider.NewInstanceFactory() {
+class ViewModelsFactory(private val repo: StoryRepository): ViewModelProvider.NewInstanceFactory() {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

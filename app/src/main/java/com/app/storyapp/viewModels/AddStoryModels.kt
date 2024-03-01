@@ -2,15 +2,20 @@ package com.app.storyapp.viewModels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
-import com.app.storyapp.data.UserRepository
-import com.app.storyapp.models.PlaceModel
+import com.app.storyapp.data.StoryRepository
+import com.app.storyapp.models.ResponseUploadStory
 import com.app.storyapp.models.UserModel
-import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
-class AddStoryModels(private val repo: UserRepository): ViewModel() {
+class AddStoryModels(private val repo: StoryRepository): ViewModel() {
     fun getSession(): LiveData<UserModel> {
         return repo.getSession().asLiveData()
+    }
+
+    suspend fun postStory(poto: MultipartBody.Part, desc: RequestBody): LiveData<ResponseUploadStory>{
+        return repo.postStory(poto, desc).asFlow().asLiveData()
     }
 }

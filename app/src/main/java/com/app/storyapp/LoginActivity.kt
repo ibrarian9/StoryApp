@@ -59,7 +59,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun getResponse(dataEmail: String, dataPass: String) {
         val inputLogin = RequestLogin(dataEmail, dataPass)
-        val callApi = BaseApi().getService().postLogin(inputLogin)
+        val callApi = BaseApi().getApiService("").postLogin(inputLogin)
 
         callApi.enqueue(object : Callback<ResponseLogin> {
 

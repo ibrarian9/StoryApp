@@ -1,15 +1,21 @@
 package com.app.storyapp.viewModels
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.app.storyapp.data.UserRepository
-import com.app.storyapp.models.PlaceModel
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.app.storyapp.data.StoryRepository
+import com.app.storyapp.models.ListStoryItem
 import com.app.storyapp.models.UserModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class ListStoryModels(private val repo: UserRepository): ViewModel() {
+class ListStoryModels(private val repo: StoryRepository): ViewModel() {
+
     fun getSession(): LiveData<UserModel> {
         return repo.getSession().asLiveData()
     }
@@ -18,9 +24,7 @@ class ListStoryModels(private val repo: UserRepository): ViewModel() {
             repo.logout()
         }
     }
-    fun savePlace(place: List<PlaceModel>) {
-        viewModelScope.launch {
-            repo.savePlace(place)
-        }
+    fun getAllStory(): LiveData<PagingData<ListStoryItem>> {
+        return repo.getAllStory().cachedIn(viewModelScope)
     }
 }

@@ -3,12 +3,11 @@ package com.app.storyapp
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.core.widget.doOnTextChanged
 import com.app.storyapp.api.BaseApi
 import com.app.storyapp.databinding.ActivityRegisterBinding
 import com.app.storyapp.models.RequestRegister
@@ -55,7 +54,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun handleRegister(dataNama: String, dataEmail: String, dataPass: String) {
         val dataRegister = RequestRegister(dataNama, dataEmail, dataPass)
-        val callApi = BaseApi().getService().postRegister(dataRegister)
+        val callApi = BaseApi().getApiService("").postRegister(dataRegister)
 
         callApi.enqueue(object : Callback<ResponseRegister> {
             override fun onResponse(

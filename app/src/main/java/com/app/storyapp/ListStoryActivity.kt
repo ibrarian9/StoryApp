@@ -4,34 +4,33 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.app.storyapp.adapter.ListStoryAdapter
-import com.app.storyapp.api.BaseApi
+import com.app.storyapp.adapter.PagingStoryAdapter
 import com.app.storyapp.databinding.ActivityListStoryBinding
-import com.app.storyapp.models.ListStoryItem
-import com.app.storyapp.models.PlaceModel
-import com.app.storyapp.models.ResponseListStory
-import com.app.storyapp.models.UserModel
 import com.app.storyapp.viewModels.ListStoryModels
 import com.app.storyapp.viewModels.ViewModelsFactory
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 class ListStoryActivity : AppCompatActivity() {
 
     private val listStoryViewModel by viewModels<ListStoryModels> {
         ViewModelsFactory.getInstance(this)
     }
+
     private lateinit var bind: ActivityListStoryBinding
-    private val listStoryAdapter by lazy { ListStoryAdapter() }
+    private val pagingStoryAdapter = PagingStoryAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bind = ActivityListStoryBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        getToken()
+        setAdapter()
 
         bind.btnMap.setOnClickListener {
             startActivity(Intent(this@ListStoryActivity, MapsActivity::class.java))
@@ -54,43 +53,16 @@ class ListStoryActivity : AppCompatActivity() {
         }
     }
 
-    private fun getDataStory(it: UserModel) {
-        val token = "Bearer ${it.token}"
-        val callApi = BaseApi().getService().getAllStory(token)
-
-        callApi.enqueue(object: Callback<ResponseListStory> {
-            override fun onResponse(
-                call: Call<ResponseListStory>,
-                response: Response<ResponseListStory>
-            ) {
-                if (response.isSuccessful){
-                    val data: List<ListStoryItem> = response.body()?.listStory ?: emptyList()
-                    listStoryAdapter.differ.submitList(data)
-                    setAdapter()
-                }
-            }
-
-            override fun onFailure(call: Call<ResponseListStory>, t: Throwable) {
-                println("Error = ${t.message}")
-            }
-
-        })
-    }
-
     private fun setAdapter() {
-
         bind.rv.apply {
             layoutManager = LinearLayoutManager(this@ListStoryActivity)
-            adapter = listStoryAdapter
-            setHasFixedSize(true)
+            adapter = pagingStoryAdapter
+        }
+
+        lifecycleScope.launch {
+            listStoryViewModel.getAllStory().observe(this@ListStoryActivity){
+                pagingStoryAdapter.submitData(lifecycle, it)
+            }
         }
     }
-
-    private fun getToken() {
-        listStoryViewModel.getSession().observe(this){
-            getDataStory(it)
-        }
-    }
-
-
 }

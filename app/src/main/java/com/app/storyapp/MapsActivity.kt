@@ -11,6 +11,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -19,6 +20,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
     private lateinit var mMap: GoogleMap
     private lateinit var bind: ActivityMapsBinding
+    private val boundsBuilder = LatLngBounds.Builder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,26 +37,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        mapStoryModel.getPlace().observe(this){
-
-        }
-
         mMap.uiSettings.isZoomControlsEnabled = true
         mMap.uiSettings.isIndoorLevelPickerEnabled = true
         mMap.uiSettings.isCompassEnabled = true
         mMap.uiSettings.isMapToolbarEnabled = true
 
-        callMapFromApi()
-
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions()
-            .position(sydney)
-            .title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        callMapFromApi(mMap)
     }
 
-    private fun callMapFromApi() {
-
+    private fun callMapFromApi(mMap: GoogleMap) {
+        mapStoryModel.getStory().observe(this){
+            it.forEach { place ->
+                val latLng = LatLng(place.lat!!, place.lon!!)
+                mMap.addMarker(MarkerOptions().position(latLng).title(place.name))
+                boundsBuilder.include(latLng)
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+            }
+        }
     }
 }

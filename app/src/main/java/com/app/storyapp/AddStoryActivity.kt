@@ -12,22 +12,18 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.app.storyapp.api.BaseApi
+import androidx.lifecycle.lifecycleScope
 import com.app.storyapp.databinding.ActivityAddStoryBinding
-import com.app.storyapp.models.ResponseUploadStory
-import com.app.storyapp.models.UserModel
 import com.app.storyapp.viewModels.AddStoryModels
 import com.app.storyapp.viewModels.ViewModelsFactory
 import com.squareup.picasso.Picasso
 import id.zelory.compressor.Compressor
+import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -92,7 +88,7 @@ class AddStoryActivity : AppCompatActivity() {
         val compressFile = Compressor(this).compressToFile(file)
 
         addStoryModel.getSession().observe(this){
-            uploadContent(it, compressFile)
+            uploadContent(compressFile)
         }
     }
 
@@ -128,15 +124,14 @@ class AddStoryActivity : AppCompatActivity() {
         Toast.makeText(this@AddStoryActivity, s, Toast.LENGTH_SHORT).show()
     }
 
-    private fun uploadContent(userModel: UserModel, poto: File) {
-        val token = "Bearer ${userModel.token}"
+    private fun uploadContent(poto: File) {
 
         bind.btnUpload.setOnClickListener {
-            handleUpload(poto, token)
+            handleUpload(poto)
         }
     }
 
-    private fun handleUpload(poto: File, token: String) {
+    private fun handleUpload(poto: File) {
         val dataDesc = bind.edDesc.text.toString()
         when {
             dataDesc.isEmpty() -> pesanError("Deskripsi masih Kosong...")
@@ -145,32 +140,19 @@ class AddStoryActivity : AppCompatActivity() {
                 val desc = dataDesc.toRequestBody("text/plain".toMediaType())
                 val photo = poto.asRequestBody("image/jpeg".toMediaTypeOrNull())
                 val imageMultipart: MultipartBody.Part = MultipartBody.Part.createFormData("photo", poto.name, photo)
-                val callApi = BaseApi().getService().postStory(token, imageMultipart, desc)
-
-                callApi.enqueue(object : Callback<ResponseUploadStory>{
-                    override fun onResponse(
-                        call: Call<ResponseUploadStory>,
-                        response: Response<ResponseUploadStory>
-                    ) {
-                        if (response.isSuccessful) {
-                            val responseBody = response.body()
-                            if (responseBody != null && !responseBody.error!!) {
-
-                                pesanError(responseBody.message!!)
-                                val i = Intent(this@AddStoryActivity, ListStoryActivity::class.java)
-                                i.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                                startActivity(i)
-                                finish()
-                            }
-                        } else {
-                            pesanError("Error : ${response.message()}")
-                        }
+                lifecycleScope.launch {
+                    try {
+                        addStoryModel.postStory(imageMultipart, desc)
+                        // Berhasil mengunggah
+                        pesanError("Berhasil Memposting...")
+                        val i = Intent(this@AddStoryActivity, ListStoryActivity::class.java)
+                        i.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                        startActivity(i)
+                        finish()
+                    } catch (e: Exception){
+                        pesanError("Gagal Memposting... $e")
                     }
-
-                    override fun onFailure(call: Call<ResponseUploadStory>, t: Throwable) {
-                        println("Error : ${t.message}")
-                    }
-                })
+                }
             }
         }
     }

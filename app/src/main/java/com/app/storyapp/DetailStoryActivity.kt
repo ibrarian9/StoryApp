@@ -3,17 +3,13 @@ package com.app.storyapp
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.app.storyapp.api.BaseApi
+import androidx.lifecycle.lifecycleScope
 import com.app.storyapp.databinding.ActivityDetailStoryBinding
-import com.app.storyapp.models.ResponseDetailStory
 import com.app.storyapp.models.Story
-import com.app.storyapp.models.UserModel
 import com.app.storyapp.viewModels.DetailStoryModels
 import com.app.storyapp.viewModels.ViewModelsFactory
 import com.squareup.picasso.Picasso
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.launch
 
 class DetailStoryActivity : AppCompatActivity() {
 
@@ -27,36 +23,19 @@ class DetailStoryActivity : AppCompatActivity() {
         bind = ActivityDetailStoryBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        getDataFromIntent()
-    }
-
-    private fun getDataFromIntent() {
-        val dataId = intent.getStringExtra("id")
-
-        detailStoryModels.getSession().observe(this) {
-            handleData(it, dataId!!)
+        lifecycleScope.launch {
+            getDataFromIntent()
         }
     }
 
-    private fun handleData(it: UserModel, dataId: String) {
-        val token = "Bearer ${it.token}"
-        val callApi = BaseApi().getService().getDetailStory(token, dataId)
+    private suspend fun getDataFromIntent() {
+        val dataId = intent.getStringExtra("id")
 
-        callApi.enqueue(object : Callback<ResponseDetailStory> {
-            override fun onResponse(
-                call: Call<ResponseDetailStory>,
-                response: Response<ResponseDetailStory>
-            ) {
-                if (response.isSuccessful){
-                    val data = response.body()?.story
-                    fetchDataToBind(data)
-                }
+        if (dataId != null) {
+            detailStoryModels.getDetailStory(dataId).observe(this){
+                fetchDataToBind(it)
             }
-
-            override fun onFailure(call: Call<ResponseDetailStory>, t: Throwable) {
-                println("Pesan error = ${t.message}")
-            }
-        })
+        }
     }
 
     private fun fetchDataToBind(data: Story?) {

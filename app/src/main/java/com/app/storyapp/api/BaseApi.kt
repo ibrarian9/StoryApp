@@ -1,6 +1,5 @@
 package com.app.storyapp.api
 
-import com.app.storyapp.models.ListStoryItem
 import com.app.storyapp.models.RequestLogin
 import com.app.storyapp.models.RequestRegister
 import com.app.storyapp.models.ResponseDetailStory
@@ -8,14 +7,17 @@ import com.app.storyapp.models.ResponseListStory
 import com.app.storyapp.models.ResponseLogin
 import com.app.storyapp.models.ResponseRegister
 import com.app.storyapp.models.ResponseUploadStory
+import okhttp3.Interceptor
 import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
 import okhttp3.RequestBody
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -24,14 +26,28 @@ import retrofit2.http.Query
 
 class BaseApi {
 
-    private fun getRetrofit(): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://story-api.dicoding.dev/v1/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    private val urlBase: String = "https://story-api.dicoding.dev/v1/"
 
-    fun getService(): urlData = getRetrofit().create(urlData::class.java)
+    fun getApiService(token: String): urlData {
+        val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+        val authInterceptor = Interceptor {
+            val req = it.request()
+            val requestHeaders = req.newBuilder()
+                .addHeader("Authorization", "Bearer $token")
+                .build()
+            it.proceed(requestHeaders)
+        }
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
+            .build()
+        val retrofit = Retrofit.Builder()
+            .baseUrl(urlBase)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(client)
+            .build()
+        return retrofit.create(urlData::class.java)
+    }
 }
 
 interface urlData {
@@ -43,22 +59,28 @@ interface urlData {
     fun postLogin(@Body reqLogin: RequestLogin): Call<ResponseLogin>
 
     @GET("stories")
-    fun getAllStory(
-        @Header("Authorization") token: String,
-        @Query("location") location: Int = 1
+    suspend fun getAllStory(
+        @Query("location") location: Int = 1,
+        @Query("page") page: Int = 1,
+        @Query("size") size: Int = 10
+    ): Response<ResponseListStory>
+
+    @GET("stories")
+    fun getStory(
+        @Query("location") location: Int = 1,
+        @Query("page") page: Int = 1,
+        @Query("size") size: Int = 10
     ): Call<ResponseListStory>
 
     @GET("stories/{id}")
     fun getDetailStory(
-        @Header("Authorization") token: String,
         @Path("id") id: String
     ): Call<ResponseDetailStory>
 
     @POST("stories")
     @Multipart
-    fun postStory(
-        @Header("Authorization") token: String,
+    suspend fun postStory(
         @Part photo: MultipartBody.Part,
         @Part("description") description: RequestBody,
-    ): Call<ResponseUploadStory>
+    ): Response<ResponseUploadStory>
 }
