@@ -8,8 +8,10 @@ import androidx.paging.PagingData
 import androidx.paging.liveData
 import com.app.storyapp.api.urlData
 import com.app.storyapp.models.ListStoryItem
+import com.app.storyapp.models.RequestLogin
 import com.app.storyapp.models.ResponseDetailStory
 import com.app.storyapp.models.ResponseListStory
+import com.app.storyapp.models.ResponseLogin
 import com.app.storyapp.models.ResponseUploadStory
 import com.app.storyapp.models.Story
 import com.app.storyapp.models.UserModel
@@ -23,10 +25,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class StoryRepository private constructor (
-    private val userPreference: UserPreference, private val apiService: urlData
+    private val userPreference: UserPreference,
+    private val apiService: urlData
 ) {
 
-    suspend fun saveSession(user: UserModel) {
+    private suspend fun saveSession(user: UserModel) {
         userPreference.saveSession(user)
     }
 
@@ -36,6 +39,24 @@ class StoryRepository private constructor (
 
     suspend fun logout() {
         userPreference.logout()
+    }
+
+    suspend fun postLogin(reqLogin: RequestLogin): LiveData<ResponseLogin> {
+        val data = MutableLiveData<ResponseLogin>()
+        try {
+            val response = apiService.postLogin(reqLogin)
+            if (response.isSuccessful){
+                data.postValue(response.body())
+                response.body().let {
+                    val token = it?.loginResult?.token
+                    val name = it?.loginResult?.name
+                    this.saveSession(UserModel(name!!, token!!))
+                }
+            }
+        } catch (e: Exception){
+            e.message
+        }
+        return data
     }
 
     suspend fun getDetailStory(id: String): Flow<Story> = callbackFlow {
@@ -89,26 +110,11 @@ class StoryRepository private constructor (
         return data
     }
 
-    fun getAllStory(): LiveData<PagingData<ListStoryItem>> {
-
-        return Pager(
-            config = PagingConfig(
-                pageSize = PAGE_SIZE,
-                enablePlaceholders = false,
-                prefetchDistance = 4 * PAGE_SIZE,
-                initialLoadSize = 3 * PAGE_SIZE
-            ),
-            pagingSourceFactory = {
-                PagingStory(apiService)
-            }, initialKey = 1
-        ).liveData
-    }
-
-    suspend fun postStory(poto: MultipartBody.Part, desc: RequestBody): LiveData<ResponseUploadStory> {
+    suspend fun postStory(desc: RequestBody, poto: MultipartBody.Part, lat: RequestBody, lon: RequestBody): LiveData<ResponseUploadStory> {
         val data = MutableLiveData<ResponseUploadStory>()
 
         try {
-            val response = apiService.postStory(poto, desc)
+            val response = apiService.postStory(desc, poto, lat, lon)
             if (response.isSuccessful){
                 data.postValue(response.body())
             }
@@ -118,13 +124,25 @@ class StoryRepository private constructor (
         return data
     }
 
+    fun getAllStory(): LiveData<PagingData<ListStoryItem>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { PagingStory(apiService) },
+            initialKey = 1
+        ).liveData
+    }
+
+
     companion object {
         private const val PAGE_SIZE = 10
 
         @Volatile
-        private var instance: StoryRepository? = null
+        var instance: StoryRepository? = null
         fun getInstance(
-          userPref: UserPreference, apiService: urlData
+            userPref: UserPreference, apiService: urlData
         ): StoryRepository =
             instance ?: synchronized(this) {
                 instance ?: StoryRepository(userPref, apiService)

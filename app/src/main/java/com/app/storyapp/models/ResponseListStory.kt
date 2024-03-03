@@ -14,6 +14,7 @@ data class ResponseListStory(
 	val message: String? = null
 )
 
+
 data class ListStoryItem(
 
 	@field:SerializedName("photoUrl")

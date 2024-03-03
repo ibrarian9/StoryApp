@@ -1,9 +1,7 @@
 package com.app.storyapp.viewModels
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
@@ -11,7 +9,6 @@ import androidx.paging.cachedIn
 import com.app.storyapp.data.StoryRepository
 import com.app.storyapp.models.ListStoryItem
 import com.app.storyapp.models.UserModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 class ListStoryModels(private val repo: StoryRepository): ViewModel() {

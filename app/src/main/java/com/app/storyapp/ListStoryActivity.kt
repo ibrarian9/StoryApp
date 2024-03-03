@@ -4,16 +4,13 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.app.storyapp.adapter.LoadingStateAdapter
 import com.app.storyapp.adapter.PagingStoryAdapter
 import com.app.storyapp.databinding.ActivityListStoryBinding
 import com.app.storyapp.viewModels.ListStoryModels
 import com.app.storyapp.viewModels.ViewModelsFactory
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class ListStoryActivity : AppCompatActivity() {
@@ -30,8 +27,6 @@ class ListStoryActivity : AppCompatActivity() {
         bind = ActivityListStoryBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        setAdapter()
-
         bind.btnMap.setOnClickListener {
             startActivity(Intent(this@ListStoryActivity, MapsActivity::class.java))
         }
@@ -39,8 +34,11 @@ class ListStoryActivity : AppCompatActivity() {
             startActivity(Intent(this@ListStoryActivity, AddStoryActivity::class.java))
         }
         listStoryViewModel.getSession().observe(this) {
-            if (!it.isLogin){
-                startActivity(Intent(this, WelcomeActivity::class.java))
+            val token = it.token
+            if (token.isNotEmpty()){
+                setAdapter()
+            } else {
+                startActivity(Intent(this@ListStoryActivity, WelcomeActivity::class.java))
                 finish()
             }
         }
@@ -56,11 +54,15 @@ class ListStoryActivity : AppCompatActivity() {
     private fun setAdapter() {
         bind.rv.apply {
             layoutManager = LinearLayoutManager(this@ListStoryActivity)
-            adapter = pagingStoryAdapter
+            adapter = pagingStoryAdapter.withLoadStateFooter(
+                footer = LoadingStateAdapter {
+                    pagingStoryAdapter.retry()
+                }
+            )
         }
 
         lifecycleScope.launch {
-            listStoryViewModel.getAllStory().observe(this@ListStoryActivity){
+            listStoryViewModel.getAllStory().observe(this@ListStoryActivity) {
                 pagingStoryAdapter.submitData(lifecycle, it)
             }
         }

@@ -19,13 +19,11 @@ class PagingStory(private val apiServce: urlData): PagingSource<Int, ListStoryIt
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ListStoryItem> {
         return try {
             val pos = params.key ?: INITIAL_PAGE_INDEX
-            val data = apiServce.getAllStory()
-            val res = data.body()?.listStory
-
+            val data = apiServce.getAllStory(pos).listStory
             LoadResult.Page(
-                data = res ?: emptyList(),
+                data = data!!,
                 prevKey = if (pos == INITIAL_PAGE_INDEX) null else pos - 1,
-                nextKey = if (res!!.isEmpty()) null else pos + 1
+                nextKey = if (data.isEmpty()) null else pos + 1
             )
         } catch (e: IOException) {
             LoadResult.Error(e)
@@ -34,7 +32,7 @@ class PagingStory(private val apiServce: urlData): PagingSource<Int, ListStoryIt
         }
     }
 
-    private companion object {
-        const val INITIAL_PAGE_INDEX = 1
+    companion object {
+        private const val INITIAL_PAGE_INDEX = 1
     }
 }

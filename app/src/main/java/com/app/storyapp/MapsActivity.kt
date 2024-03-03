@@ -42,6 +42,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.uiSettings.isCompassEnabled = true
         mMap.uiSettings.isMapToolbarEnabled = true
 
+        val local = LatLng(-6.137962924705028, 106.78188193263647)
+        mMap.addMarker(MarkerOptions().position(local).title("mantap"))
+        boundsBuilder.include(local)
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(local))
+
         callMapFromApi(mMap)
     }
 

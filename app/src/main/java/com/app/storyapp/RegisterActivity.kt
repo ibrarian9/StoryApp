@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.app.storyapp.api.BaseApi
+import com.app.storyapp.data.UserPreference
+import com.app.storyapp.data.dataStore
 import com.app.storyapp.databinding.ActivityRegisterBinding
 import com.app.storyapp.models.RequestRegister
 import com.app.storyapp.models.ResponseRegister
@@ -54,7 +56,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun handleRegister(dataNama: String, dataEmail: String, dataPass: String) {
         val dataRegister = RequestRegister(dataNama, dataEmail, dataPass)
-        val callApi = BaseApi().getApiService("").postRegister(dataRegister)
+        val callApi = BaseApi().getApiService(pref = UserPreference.getInstance(dataStore)).postRegister(dataRegister)
 
         callApi.enqueue(object : Callback<ResponseRegister> {
             override fun onResponse(

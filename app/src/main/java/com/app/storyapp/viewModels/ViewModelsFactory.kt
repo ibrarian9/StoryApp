@@ -3,6 +3,7 @@ package com.app.storyapp.viewModels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.app.storyapp.data.Injection
 import com.app.storyapp.data.StoryRepository
 

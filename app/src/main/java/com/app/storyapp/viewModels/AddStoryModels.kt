@@ -15,7 +15,7 @@ class AddStoryModels(private val repo: StoryRepository): ViewModel() {
         return repo.getSession().asLiveData()
     }
 
-    suspend fun postStory(poto: MultipartBody.Part, desc: RequestBody): LiveData<ResponseUploadStory>{
-        return repo.postStory(poto, desc).asFlow().asLiveData()
+    suspend fun postStory(desc: RequestBody, poto: MultipartBody.Part, lat: RequestBody, lon: RequestBody): LiveData<ResponseUploadStory>{
+        return repo.postStory(desc, poto, lat, lon).asFlow().asLiveData()
     }
 }

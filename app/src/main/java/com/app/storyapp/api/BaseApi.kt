@@ -1,5 +1,6 @@
 package com.app.storyapp.api
 
+import com.app.storyapp.data.UserPreference
 import com.app.storyapp.models.RequestLogin
 import com.app.storyapp.models.RequestRegister
 import com.app.storyapp.models.ResponseDetailStory
@@ -7,6 +8,8 @@ import com.app.storyapp.models.ResponseListStory
 import com.app.storyapp.models.ResponseLogin
 import com.app.storyapp.models.ResponseRegister
 import com.app.storyapp.models.ResponseUploadStory
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -28,12 +31,15 @@ class BaseApi {
 
     private val urlBase: String = "https://story-api.dicoding.dev/v1/"
 
-    fun getApiService(token: String): urlData {
+    fun getApiService(pref: UserPreference): urlData {
         val loggingInterceptor = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
         val authInterceptor = Interceptor {
             val req = it.request()
+            val user = runBlocking {
+                pref.getSession().first()
+            }
             val requestHeaders = req.newBuilder()
-                .addHeader("Authorization", "Bearer $token")
+                .addHeader("Authorization", "Bearer ${user.token}")
                 .build()
             it.proceed(requestHeaders)
         }
@@ -56,14 +62,14 @@ interface urlData {
     fun postRegister(@Body reqRegister: RequestRegister): Call<ResponseRegister>
 
     @POST("login")
-    fun postLogin(@Body reqLogin: RequestLogin): Call<ResponseLogin>
+    suspend fun postLogin(@Body reqLogin: RequestLogin): Response<ResponseLogin>
 
     @GET("stories")
     suspend fun getAllStory(
+        @Query("page") page: Int,
         @Query("location") location: Int = 1,
-        @Query("page") page: Int = 1,
         @Query("size") size: Int = 10
-    ): Response<ResponseListStory>
+    ): ResponseListStory
 
     @GET("stories")
     fun getStory(
@@ -80,7 +86,9 @@ interface urlData {
     @POST("stories")
     @Multipart
     suspend fun postStory(
-        @Part photo: MultipartBody.Part,
-        @Part("description") description: RequestBody,
+        @Part("description") desc: RequestBody,
+        @Part poto: MultipartBody.Part,
+        @Part("lat") lat: RequestBody,
+        @Part("lon") lon: RequestBody
     ): Response<ResponseUploadStory>
 }

@@ -30,7 +30,6 @@ class PagingStoryAdapter : PagingDataAdapter<ListStoryItem, PagingStoryAdapter.M
             val i = Intent(it.context, DetailStoryActivity::class.java)
             i.putExtra("id", story.id)
             it.context.startActivity(i, ActivityOptionsCompat.makeSceneTransitionAnimation(it.context as Activity).toBundle())
-
         }
     }
 
@@ -39,13 +38,16 @@ class PagingStoryAdapter : PagingDataAdapter<ListStoryItem, PagingStoryAdapter.M
         return MyViewHolder(bind)
     }
 
-    object DIFF_CALLBACK : DiffUtil.ItemCallback<ListStoryItem>() {
-        override fun areItemsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
-            return oldItem.id == newItem.id
-        }
+    companion object {
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<ListStoryItem>() {
+            override fun areItemsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
+                return oldItem.id == newItem.id
+            }
 
-        override fun areContentsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
-            return oldItem == newItem
+            override fun areContentsTheSame(oldItem: ListStoryItem, newItem: ListStoryItem): Boolean {
+                return oldItem == newItem
+            }
         }
     }
+
 }

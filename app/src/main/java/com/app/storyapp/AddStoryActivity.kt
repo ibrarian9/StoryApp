@@ -1,17 +1,23 @@
 package com.app.storyapp
 
+import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.app.storyapp.databinding.ActivityAddStoryBinding
 import com.app.storyapp.viewModels.AddStoryModels
@@ -37,16 +43,53 @@ class AddStoryActivity : AppCompatActivity() {
     private lateinit var bind: ActivityAddStoryBinding
     private var imageUri: Uri? = null
     private var file: File? = null
-    private val FILENAME_FORMAT = "yyyyMMdd_HHmmss"
     private val timeStamp: String = SimpleDateFormat(FILENAME_FORMAT, Locale.US).format(Date())
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bind = ActivityAddStoryBinding.inflate(layoutInflater)
         setContentView(bind.root)
-
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                getMyLocationData { _, _ ->  }
+            }
+        }
         cameraOrGallery()
+        getMyLocationData { _, _ ->  }
     }
+
+    private fun getMyLocationData(callback: (lat:Double, lon:Double) -> Unit) {
+        if (ContextCompat.checkSelfPermission(
+                this.applicationContext,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                val loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                loc?.let {
+                    val lat: Double = it.latitude
+                    val lon: Double = it.longitude
+                    callback(lat, lon)
+                }
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
 
     private fun cameraOrGallery() {
         bind.gallery.setOnClickListener {
@@ -63,7 +106,7 @@ class AddStoryActivity : AppCompatActivity() {
     private val resultLauncherGallery = registerForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) {
-        if (it != null){
+        if (it != null) {
             Picasso.get().load(it).fit().into(bind.preview)
             val path = getPathFromUri(this, it)
             file = File(path!!)
@@ -74,7 +117,7 @@ class AddStoryActivity : AppCompatActivity() {
     private val resultLauncherCamera = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { isSuccess ->
-        if (isSuccess){
+        if (isSuccess) {
             imageUri?.let {
                 println("Image Uri = $it")
                 Picasso.get().load(it).fit().into(bind.preview)
@@ -84,12 +127,10 @@ class AddStoryActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun handleContent(file: File) {
         val compressFile = Compressor(this).compressToFile(file)
-
-        addStoryModel.getSession().observe(this){
-            uploadContent(compressFile)
-        }
+        uploadContent(compressFile)
     }
 
     private fun getPathFromUri(context: Context, it: Uri): String? {
@@ -125,13 +166,18 @@ class AddStoryActivity : AppCompatActivity() {
     }
 
     private fun uploadContent(poto: File) {
-
-        bind.btnUpload.setOnClickListener {
-            handleUpload(poto)
+        getMyLocationData{
+            lat, lon ->
+            bind.btnUpload.setOnClickListener {
+                handleUpload(poto, lat, lon)
+            }
         }
+
     }
 
-    private fun handleUpload(poto: File) {
+    private fun handleUpload(poto: File, lat: Double, lon: Double) {
+
+        println("ini $lat dan $lon, truss ini foto $poto")
         val dataDesc = bind.edDesc.text.toString()
         when {
             dataDesc.isEmpty() -> pesanError("Deskripsi masih Kosong...")
@@ -139,10 +185,16 @@ class AddStoryActivity : AppCompatActivity() {
             else -> {
                 val desc = dataDesc.toRequestBody("text/plain".toMediaType())
                 val photo = poto.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val imageMultipart: MultipartBody.Part = MultipartBody.Part.createFormData("photo", poto.name, photo)
+                val imageMultipart: MultipartBody.Part
+                        = MultipartBody.Part.createFormData("photo", poto.name, photo)
+                val latData = lat.toString()
+                val lonData = lon.toString()
+                val reqLat = latData.toRequestBody("text/plain".toMediaType())
+                val reqLon = lonData.toRequestBody("text/plain".toMediaType())
+
                 lifecycleScope.launch {
                     try {
-                        addStoryModel.postStory(imageMultipart, desc)
+                        addStoryModel.postStory(desc, imageMultipart, reqLat, reqLon)
                         // Berhasil mengunggah
                         pesanError("Berhasil Memposting...")
                         val i = Intent(this@AddStoryActivity, ListStoryActivity::class.java)
@@ -150,10 +202,14 @@ class AddStoryActivity : AppCompatActivity() {
                         startActivity(i)
                         finish()
                     } catch (e: Exception){
-                        pesanError("Gagal Memposting... $e")
+                        pesanError("Gagal Memposting... ${e.message}")
                     }
                 }
             }
         }
+    }
+
+    companion object {
+        private const val FILENAME_FORMAT = "yyyyMMdd_HHmmss"
     }
 }
