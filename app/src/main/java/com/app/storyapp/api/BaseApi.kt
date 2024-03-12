@@ -67,7 +67,7 @@ interface urlData {
     @GET("stories")
     suspend fun getAllStory(
         @Query("page") page: Int,
-        @Query("location") location: Int = 1,
+        @Query("location") location: Int = 0,
         @Query("size") size: Int = 10
     ): ResponseListStory
 
@@ -87,8 +87,6 @@ interface urlData {
     @Multipart
     suspend fun postStory(
         @Part("description") desc: RequestBody,
-        @Part poto: MultipartBody.Part,
-        @Part("lat") lat: RequestBody,
-        @Part("lon") lon: RequestBody
+        @Part poto: MultipartBody.Part
     ): Response<ResponseUploadStory>
 }

@@ -110,11 +110,11 @@ class StoryRepository private constructor (
         return data
     }
 
-    suspend fun postStory(desc: RequestBody, poto: MultipartBody.Part, lat: RequestBody, lon: RequestBody): LiveData<ResponseUploadStory> {
+    suspend fun postStory(desc: RequestBody, poto: MultipartBody.Part): LiveData<ResponseUploadStory> {
         val data = MutableLiveData<ResponseUploadStory>()
 
         try {
-            val response = apiService.postStory(desc, poto, lat, lon)
+            val response = apiService.postStory(desc, poto)
             if (response.isSuccessful){
                 data.postValue(response.body())
             }
